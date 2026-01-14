@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "YTM AI Artist & Song Blocker",
+  "version": "1.0",
+  "description": "Block specific artists and keywords on YouTube Music. Take control over AI slop",
+  "permissions": ["storage"],
+  "host_permissions": ["https://music.youtube.com/*", "https://raw.githubusercontent.com/romiem/soul-over-ai/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Manage Block List"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://music.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+,
+  "icons": {
+    "16": "16.png", 
+    "48": "48.png",
+    "128": "128.png"
+  }
+}

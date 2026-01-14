@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 340px; font-family: sans-serif; padding: 10px; background: #222; color: #fff; }
+    h3 { margin-top: 0; color: #ff4e45; text-align: center;}
+    .section { margin-bottom: 15px; }
+    /* Inputs */
+    input { padding: 5px; border: none; border-radius: 4px; background: #eee; margin-right: 2px; }
+    .input-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    /* Buttons */
+    button { cursor: pointer; border-radius: 4px; border: none; padding: 5px; font-weight: bold;}
+    button#add-btn { width: 25%; background: #fff; }
+    .sync-btn { width: 100%; background: #ff4e45; color: white; padding: 10px; margin-bottom: 10px;}
+    .secondary-btn { width: 48%; background: #444; color: #fff; }
+    /* List */
+    ul { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; background: #333; border-radius: 4px; }
+    li { padding: 5px 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #444; font-size: 13px; align-items: center;}
+    li:last-child { border-bottom: none; }
+    .item-text { display: flex; flex-direction: column; }
+    .sub-text { font-size: 10px; color: #aaa; }
+    .remove-btn { color: #ff4e45; cursor: pointer; font-weight: bold; font-size: 16px; padding-left: 10px;}
+    /* Tabs */
+    .tab-header { display: flex; justify-content: space-around; margin-bottom: 15px; border-bottom: 1px solid #444; }
+    .tab { cursor: pointer; padding: 8px; border-bottom: 2px solid transparent; opacity: 0.6; font-size: 13px;}
+    .tab.active { border-bottom: 2px solid #ff4e45; opacity: 1; color: #fff; }
+    .hidden { display: none; }
+    .status { font-size: 11px; color: #aaa; text-align: center; margin-bottom: 10px;}
+  </style>
+</head>
+<body>
+  <h3>YTM AI Artist & Song Blocker</h3>
+  
+  <div class="tab-header">
+    <div id="tab-keywords" class="tab active">Keywords</div>
+    <div id="tab-tracks" class="tab">Songs</div>
+    <div id="tab-artists" class="tab">Artists</div>
+    <div id="tab-database" class="tab">DB</div>
+  </div>
+
+  <div id="view-keywords" class="section">
+    <div class="input-row">
+      <input type="text" id="keyword-input" style="width:70%" placeholder="Partial match (e.g. Live)...">
+      <button id="add-keyword-btn" style="width:25%">Add</button>
+    </div>
+    <ul id="keyword-list"></ul>
+  </div>
+
+  <div id="view-tracks" class="section hidden">
+    <div class="input-row">
+      <input type="text" id="track-title-input" style="width:38%" placeholder="Title...">
+      <input type="text" id="track-artist-input" style="width:38%" placeholder="Artist...">
+      <button id="add-track-btn" style="width:20%">Add</button>
+    </div>
+    <ul id="track-list"></ul>
+  </div>
+
+  <div id="view-artists" class="section hidden">
+    <div class="input-row">
+      <input type="text" id="artist-input" style="width:70%" placeholder="Artist name...">
+      <button id="add-artist-btn" style="width:25%">Add</button>
+    </div>
+    <ul id="artist-list"></ul>
+  </div>
+
+  <div id="view-database" class="section hidden">
+    <p class="status">Sync against "Soul Over AI" repository.</p>
+    <div id="ai-status" class="status" style="color: #4CAF50;">Unknown status</div>
+    <button id="sync-ai-btn" class="sync-btn">🔄 Update AI Blocklist</button>
+    
+    <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px; display: flex; justify-content: space-between;">
+        <button id="export-btn" class="secondary-btn">⬇ Export All</button>
+        <button id="import-btn" class="secondary-btn">⬆ Import All</button>
+    </div>
+    <input type="file" id="file-input" style="display: none;" accept=".json">
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
