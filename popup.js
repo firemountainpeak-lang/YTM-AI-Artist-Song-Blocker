@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
       renderSimpleList(keywordList, result.blockedKeywords || [], 'blockedKeywords');
       renderTrackList(trackList, result.blockedTracks || [], 'blockedTracks');
       
-      // Update DB Status
       const aiCount = (result.aiBlocklist || []).length;
       document.getElementById('ai-status').innerText = `Active AI Shield: ${aiCount} artists blocked`;
     });
@@ -114,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- AI SYNC LOGIC ---
+  // --- AI SYNC LOGIC (MANUAL) ---
   document.getElementById('sync-ai-btn').onclick = async () => {
     const btn = document.getElementById('sync-ai-btn');
     const status = document.getElementById('ai-status');
@@ -122,11 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.innerText = "Fetching...";
     
     try {
-      const response = await fetch('https://raw.githubusercontent.com/romiem/soul-over-ai/refs/heads/main/dist/artists.json');
+      // FIXED URL HERE:
+      const response = await fetch('https://raw.githubusercontent.com/romiem/soul-over-ai/main/dist/artists.json');
       if (!response.ok) throw new Error('Network error');
       
       const data = await response.json();
-      // Extract ONLY the "name" field from the JSON objects
       const aiArtists = data.map(item => item.name).filter(n => n);
       
       chrome.storage.local.set({ aiBlocklist: aiArtists }, () => {
@@ -137,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (err) {
       console.error(err);
-      status.innerText = "Error fetching list. Check permissions.";
+      status.innerText = "Error fetching. Check connection.";
       btn.innerText = "Retry";
       btn.disabled = false;
     }

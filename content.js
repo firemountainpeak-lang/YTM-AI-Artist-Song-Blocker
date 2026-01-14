@@ -1,15 +1,14 @@
 let blockedArtists = [];
 let blockedKeywords = [];
 let blockedTracks = [];
-let aiBlocklist = []; // NEW: The external AI list
+let aiBlocklist = []; 
 
-// 1. Load settings
 const loadSettings = () => {
   chrome.storage.local.get(['blockedArtists', 'blockedKeywords', 'blockedTracks', 'aiBlocklist'], (result) => {
     blockedArtists = result.blockedArtists || [];
     blockedKeywords = result.blockedKeywords || [];
     blockedTracks = result.blockedTracks || [];
-    aiBlocklist = result.aiBlocklist || []; // Load AI list
+    aiBlocklist = result.aiBlocklist || [];
     checkAndSkip(); 
   });
 };
@@ -24,42 +23,49 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-// --- SMART MATCHING LOGIC ---
 const shouldSkip = (artistLine, songTitle) => {
   const cleanTitle = songTitle.toLowerCase().trim();
   const cleanArtistLine = artistLine.toLowerCase();
 
-  // A. Check Specific Tracks
+  // 1. Check Specific Tracks (Exact Match)
   const isTrackBlocked = blockedTracks.some(trackObj => {
     const storedTitle = (trackObj.title || trackObj).toLowerCase();
     const storedArtist = (trackObj.artist || "").toLowerCase();
-    if (storedTitle !== cleanTitle) return false;
-    if (storedArtist && !cleanArtistLine.includes(storedArtist)) return false;
-    return true;
+    return storedTitle === cleanTitle && (!storedArtist || cleanArtistLine.includes(storedArtist));
   });
   if (isTrackBlocked) return true;
 
-  // B. Check Keywords
-  const isKeywordBlocked = blockedKeywords.some(keyword => 
-    cleanTitle.includes(keyword.toLowerCase())
-  );
+  // 2. Check Keywords (Partial Match)
+  const isKeywordBlocked = blockedKeywords.some(keyword => cleanTitle.includes(keyword.toLowerCase()));
   if (isKeywordBlocked) return true;
 
-  // C. Check Artists (Manual + AI List)
+  // 3. Check Manual Artists (Split Strategy)
   const primaryText = cleanArtistLine.split('•')[0];
-  const currentArtists = primaryText.split(/\s*&|\s*,|\s+feat\.|\s+ft\.|\s*\/\s*/g)
+  const currentArtists = primaryText.split(/\s*&|\s*,|\s+feat\.|\s+ft\.|\s*\/\s*|\s+x\s+/g)
     .map(a => a.trim())
     .filter(a => a.length > 0);
 
-  // Combine your manual list with the AI list for checking
-  const allBlockedArtists = [...blockedArtists, ...aiBlocklist];
+  const isManualBlocked = blockedArtists.some(blocked => {
+    return currentArtists.includes(blocked.toLowerCase().trim());
+  });
+  if (isManualBlocked) return true;
 
-  const isArtistBlocked = allBlockedArtists.some(blocked => {
-    const cleanBlocked = blocked.toLowerCase().trim();
-    return currentArtists.includes(cleanBlocked);
+  // 4. Check AI Blocklist (AGGRESSIVE SUBSTRING MATCH)
+  const isAiBlocked = aiBlocklist.some(aiArtist => {
+    const cleanAi = aiArtist.toLowerCase().trim();
+    if (cleanAi.length > 3) {
+      return cleanArtistLine.includes(cleanAi);
+    } else {
+      return currentArtists.includes(cleanAi);
+    }
   });
 
-  return isArtistBlocked;
+  if (isAiBlocked) {
+    console.log(`Skipping AI Slop: ${artistLine}`);
+    return true;
+  }
+
+  return false;
 };
 
 const checkAndSkip = () => {
@@ -72,17 +78,11 @@ const checkAndSkip = () => {
   const artistText = artistEl.textContent;
 
   if (shouldSkip(artistText, title)) {
-    console.log(`Skipping blocked content: ${title}`);
     const nextButton = document.querySelector('.next-button');
     if (nextButton) nextButton.click();
   }
 };
 
-// ... (Keep the Button Injection code exactly the same as before) ...
-// (I will omit the injection code here to save space, but DO NOT delete it from your file)
-// Insert the injectBlockButton, observer, and startObserver functions here.
-
-// --- RE-ADD BUTTON INJECTION CODE BELOW THIS LINE IF COPY-PASTING ---
 const createBtn = (id, text, onClick) => {
   const btn = document.createElement('button');
   btn.id = id;
