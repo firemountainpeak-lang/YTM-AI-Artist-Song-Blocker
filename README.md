@@ -87,4 +87,4 @@ All data (blocked artists, songs, and keywords) is stored locally on your device
 ---
 
 ## 🤝 Credits
-* **AI Database:** [Soul Over AI](https://github.com/romiem/soul-over-ai) by [Romiem](https://github.com/romiem)
+* **AI Database:** [Soul Over AI](https://github.com/xoundbyte/soul-over-ai) by [xoundbyte](https://github.com/xoundbyte)
