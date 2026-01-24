@@ -1,8 +1,13 @@
 New in V1.3
-Automated down voting (thumbs down) when an AI song is detected.
+
+Automated down voting (thumbs down) when an AI song is detected
+
 UI Overhaul
+
 Alphabetical sorting of block lists
-------
+
+
+
 # YTM-AI-Artist-Song-Blocker
 A chrome extension that automatically blocks AI artists in YouTube Music and allows you to manually block artists, songs and keywords.
 
