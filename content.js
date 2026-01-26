@@ -1,6 +1,6 @@
 /*
  * YTM Ward - Production Engine
- * Fix: Button Placement (Moved next to 3-Dots)
+ * Fix: "Whole Word" Matching (No more partial match false positives)
  */
 
 const GITHUB_URL = 'https://raw.githubusercontent.com/xoundbyte/soul-over-ai/main/dist/artists.json'; 
@@ -44,20 +44,18 @@ async function updateBlockList() {
         const response = await fetch(GITHUB_URL); 
         if (response.ok) {
             const data = await response.json();
-            // UNIVERSAL PARSER
             if (Array.isArray(data)) remoteArtists = data;
             else if (data.artists && Array.isArray(data.artists)) remoteArtists = data.artists;
             else remoteArtists = Object.values(data).flat();
         }
     } catch (e) { }
 
-    // FLATTEN EVERYTHING
     const trackTitles = localTracks.map(t => (typeof t === 'object' && t.title) ? t.title : t);
     const rawList = [...localArtists, ...localKeywords, ...trackTitles, ...remoteArtists];
     
     blockList = [...new Set(rawList)]
         .filter(item => typeof item === 'string' && item.trim().length > 0)
-        .map(s => s.toLowerCase())
+        .map(s => s.toLowerCase()) // Keep lowercase for case-insensitive matching
         .sort(); 
         
     console.log(`[YTM Ward] Engine Loaded ${blockList.length} terms.`);
@@ -112,11 +110,25 @@ function checkAndSkip() {
     if (!song) return;
     if (song.title === lastProcessedSong) return;
 
+    // Combine Artist and Title for checking
     const checkString = (song.artist + " " + song.title).toLowerCase();
-    const match = blockList.find(term => checkString.includes(term));
+
+    // MATCHING LOGIC: Whole Word Regex
+    // This creates a regex like /\bword\b/ which means "word" must stand alone
+    const match = blockList.find(term => {
+        // Escape special regex characters in the blocked term (like ., *, +)
+        const safeTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        // \b ensures word boundaries. 
+        // "after" matches "after" but NOT "afterpiece"
+        const regex = new RegExp(`\\b${safeTerm}\\b`, 'i');
+        
+        return regex.test(checkString);
+    });
     
     if (match) {
         lastProcessedSong = song.title;
+        console.log(`[YTM Ward] 🛑 BLOCKED: Found whole word "${match}"`);
         performDownvoteAndSkip();
     }
 }
@@ -142,7 +154,6 @@ function injectButtons() {
     const threeDots = document.querySelector("ytmusic-player-bar .middle-controls-buttons ytmusic-menu-renderer") ||
                       document.querySelector("ytmusic-player-bar ytmusic-menu-renderer");
 
-    // Fallback: The container itself if we can't find the dots
     const targetParent = threeDots ? threeDots.parentNode : document.querySelector("ytmusic-player-bar .middle-controls-buttons");
 
     if (targetParent) {
@@ -158,18 +169,14 @@ function injectButtons() {
         
         container.appendChild(createButton("🚫 SONG", () => {
             const song = getSongInfo();
-            // Pass the whole song object
             if (song) addToBlockList(song, 'blockedTracks');
         }));
 
-        // INSERTION: Place AFTER the 3 dots if found, otherwise append to container
         if (threeDots && threeDots.nextSibling) {
             targetParent.insertBefore(container, threeDots.nextSibling);
         } else {
             targetParent.appendChild(container);
         }
-        
-        console.log("[YTM Ward] 🔴 RED BUTTONS INJECTED (Center) 🔴");
     }
 }
 
@@ -180,7 +187,6 @@ async function addToBlockList(term, listName) {
     const localData = await chrome.storage.local.get([targetList]);
     let list = localData[targetList] || [];
     
-    // Check duplication (Handles strings & objects)
     const exists = list.some(item => {
         if (typeof term === 'string') return item === term;
         return item.title === term.title;

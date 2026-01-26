@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YTM AI Artist & Song Blocker",
-  "version": "1.3",
+  "version": "1.4",
   "description": "Block specific artists and keywords on YouTube Music. Automatically Take control over AI slop with Soul Over AI integration",
   "permissions": [
     "storage"
