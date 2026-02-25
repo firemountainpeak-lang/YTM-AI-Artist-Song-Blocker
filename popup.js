@@ -63,7 +63,7 @@ function render() {
     inputArea.style.display = 'flex';
     const key = KEYS[currentTab];
     
-    chrome.storage.local.get([key], (res) => {
+    browser.storage.local.get([key]).then((res) => {
         let items = res[key] || [];
         items = safeSort(items);
         
@@ -127,18 +127,18 @@ function addItem() {
     if (!val) return;
     
     const key = KEYS[currentTab];
-    chrome.storage.local.get([key], (res) => {
+    browser.storage.local.get([key]).then((res) => {
         const items = res[key] || [];
         
-        const newItem = (currentTab === 'songs') 
-            ? { title: val, artist: "Manual Entry" } 
+        const newItem = (currentTab === 'songs')
+            ? { title: val, artist: "Manual Entry" }
             : val;
 
         const exists = items.some(i => getDisplayText(i) === getDisplayText(newItem));
         
         if (!exists) {
             items.push(newItem);
-            chrome.storage.local.set({ [key]: items }, () => {
+            browser.storage.local.set({ [key]: items }).then(() => {
                 input.value = '';
                 render();
                 showStatus('Added.');
@@ -150,10 +150,10 @@ function addItem() {
 }
 
 function removeItem(key, val) {
-    chrome.storage.local.get([key], (res) => {
+    browser.storage.local.get([key]).then((res) => {
         let items = res[key] || [];
         items = items.filter(i => getDisplayText(i) !== getDisplayText(val));
-        chrome.storage.local.set({ [key]: items }, render);
+        browser.storage.local.set({ [key]: items }).then(render);
     });
 }
 
@@ -179,7 +179,7 @@ btnRefresh.onclick = () => {
 };
 
 btnExport.onclick = () => {
-    chrome.storage.local.get(null, (data) => {
+    browser.storage.local.get(null).then((data) => {
         const blob = new Blob([JSON.stringify(data, null, 2)], {type : 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -199,7 +199,7 @@ fileInput.onchange = (e) => {
     reader.onload = (event) => {
         try {
             const data = JSON.parse(event.target.result);
-            chrome.storage.local.set(data, () => {
+            browser.storage.local.set(data).then(() => {
                 render();
                 showStatus('Import Successful.', '#4caf50');
             });
