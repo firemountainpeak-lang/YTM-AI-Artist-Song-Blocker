@@ -34,7 +34,7 @@ function simulateClick(element) {
 }
 
 async function updateBlockList() {
-    const localData = await chrome.storage.local.get(['blockedArtists', 'blockedKeywords', 'blockedTracks']);
+    const localData = await browser.storage.local.get(['blockedArtists', 'blockedKeywords', 'blockedTracks']);
     const localArtists = localData.blockedArtists || [];
     const localKeywords = localData.blockedKeywords || []; 
     const localTracks = localData.blockedTracks || []; 
@@ -184,7 +184,7 @@ async function addToBlockList(term, listName) {
     if (!term) return;
     const targetList = listName || 'blockedArtists';
     
-    const localData = await chrome.storage.local.get([targetList]);
+    const localData = await browser.storage.local.get([targetList]);
     let list = localData[targetList] || [];
     
     const exists = list.some(item => {
@@ -196,7 +196,7 @@ async function addToBlockList(term, listName) {
         list.push(term);
         const update = {};
         update[targetList] = list;
-        await chrome.storage.local.set(update);
+        await browser.storage.local.set(update);
         await updateBlockList();
         performDownvoteAndSkip();
     }
@@ -223,4 +223,4 @@ async function init() {
 }
 
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
-chrome.storage.onChanged.addListener((changes, namespace) => { if (namespace === 'local') updateBlockList(); });
+browser.storage.onChanged.addListener((changes, namespace) => { if (namespace === 'local') updateBlockList(); });
