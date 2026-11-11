@@ -5,6 +5,16 @@
 
 const GITHUB_URL = 'https://raw.githubusercontent.com/xoundbyte/soul-over-ai/main/dist/artists.json'; 
 
+// Player selectors: old layout (ytmusic-player-bar) and 2026 layout (ytmusic-miniplayer).
+const SEL = {
+    bar: 'ytmusic-player-bar, ytmusic-miniplayer',
+    title: 'ytmusic-player-bar .title, ytmusic-miniplayer .ytmusicTrackInfoTitle',
+    byline: 'ytmusic-player-bar .byline, ytmusic-miniplayer .ytmusicTrackInfoByline',
+    next: 'ytmusic-player-bar .next-button, ytmusic-miniplayer button[aria-label="Next"]',
+    dislike: '.middle-controls-buttons .dislike, ytmusic-player-bar .dislike, ytmusic-miniplayer dislike-button-view-model',
+    anchor: 'ytmusic-player-bar .middle-controls-buttons ytmusic-menu-renderer, ytmusic-player-bar ytmusic-menu-renderer, ytmusic-miniplayer dislike-button-view-model',
+};
+
 let blockList = [];
 let trackList = [];
 let blockRegexes = [];
@@ -84,7 +94,7 @@ function primaryArtist(byline) {
 }
 
 function skipTrack() {
-    const nextBtn = document.querySelector("ytmusic-player-bar .next-button");
+    const nextBtn = document.querySelector(SEL.next);
     if (nextBtn) simulateClick(nextBtn);
 
     setTimeout(() => {
@@ -94,8 +104,7 @@ function skipTrack() {
 }
 
 function performDownvoteAndSkip() {
-    const dislikeWrapper = document.querySelector(".middle-controls-buttons .dislike") || 
-                           document.querySelector("ytmusic-player-bar .dislike");
+    const dislikeWrapper = document.querySelector(SEL.dislike);
 
     if (!dislikeWrapper) { skipTrack(); return; }
 
@@ -121,8 +130,8 @@ function performDownvoteAndSkip() {
 }
 
 function getSongInfo() {
-    const titleEl = document.querySelector("ytmusic-player-bar .title");
-    const bylineEl = document.querySelector("ytmusic-player-bar .byline");
+    const titleEl = document.querySelector(SEL.title);
+    const bylineEl = document.querySelector(SEL.byline);
     if (!titleEl || !bylineEl) return null;
     return { title: titleEl.textContent.trim(), artist: bylineEl.textContent.trim() };
 }
@@ -178,8 +187,7 @@ function injectButtons() {
     if (document.getElementById("ytm-ward-controls")) return;
 
     // TARGET: The "3 Dots" Menu
-    const threeDots = document.querySelector("ytmusic-player-bar .middle-controls-buttons ytmusic-menu-renderer") ||
-                      document.querySelector("ytmusic-player-bar ytmusic-menu-renderer");
+    const threeDots = document.querySelector(SEL.anchor);
 
     const targetParent = threeDots ? threeDots.parentNode : document.querySelector("ytmusic-player-bar .middle-controls-buttons");
 
@@ -231,7 +239,7 @@ async function addToBlockList(term, listName) {
 
 async function init() {
     await updateBlockList();
-    const playerBar = await waitForElement("ytmusic-player-bar");
+    const playerBar = await waitForElement(SEL.bar);
     injectButtons();
     checkAndSkip();
 
@@ -242,7 +250,7 @@ async function init() {
 
     observer.observe(playerBar, { subtree: true, childList: true, attributes: true });
     
-    const titleNode = document.querySelector("ytmusic-player-bar .title");
+    const titleNode = document.querySelector(SEL.title);
     if (titleNode) {
         new MutationObserver(() => checkAndSkip())
             .observe(titleNode, { characterData: true, subtree: true, childList: true });
