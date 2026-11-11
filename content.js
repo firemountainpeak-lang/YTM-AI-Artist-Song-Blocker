@@ -5,7 +5,8 @@
 
 const GITHUB_URL = 'https://raw.githubusercontent.com/xoundbyte/soul-over-ai/main/dist/artists.json'; 
 
-let blockList = []; 
+let blockList = [];
+let trackList = [];
 let lastProcessedSong = ""; 
 
 console.log("[YTM Ward] Engine Started. Created by Spirit Flame (spiritflame@tutamail.com)");
@@ -50,8 +51,17 @@ async function updateBlockList() {
         }
     } catch (e) { }
 
-    const trackTitles = localTracks.map(t => (typeof t === 'object' && t.title) ? t.title : t);
-    const rawList = [...localArtists, ...localKeywords, ...trackTitles, ...remoteArtists];
+    const remoteNames = remoteArtists
+        .map(a => typeof a === 'string' ? a : (a && typeof a.name === 'string' && a.removed !== true ? a.name : null))
+        .filter(Boolean);
+    const rawList = [...localArtists, ...localKeywords, ...remoteNames];
+
+    trackList = localTracks
+        .map(t => typeof t === 'string'
+            ? { title: t.trim().toLowerCase(), artist: null }
+            : { title: String((t && t.title) || '').trim().toLowerCase(),
+                artist: (t && typeof t.artist === 'string') ? primaryArtist(t.artist) : null })
+        .filter(t => t.title.length > 0);
     
     blockList = [...new Set(rawList)]
         .filter(item => typeof item === 'string' && item.trim().length > 0)
@@ -59,6 +69,10 @@ async function updateBlockList() {
         .sort(); 
         
     console.log(`[YTM Ward] Engine Loaded ${blockList.length} terms.`);
+}
+
+function primaryArtist(byline) {
+    return byline.split('•')[0].trim().toLowerCase();
 }
 
 function skipTrack() {
@@ -110,18 +124,27 @@ function checkAndSkip() {
     if (!song) return;
     if (song.title === lastProcessedSong) return;
 
+    const songTitle = song.title.trim().toLowerCase();
+    const songArtist = primaryArtist(song.artist);
+    const trackHit = trackList.find(t => t.title === songTitle && (t.artist === null || t.artist === songArtist));
+    if (trackHit) {
+        lastProcessedSong = song.title;
+        console.log(`[YTM Ward] 🛑 BLOCKED: song "${song.title}"`);
+        performDownvoteAndSkip();
+        return;
+    }
+
     // Combine Artist and Title for checking
     const checkString = (song.artist + " " + song.title).toLowerCase();
 
     // MATCHING LOGIC: Whole Word Regex
-    // This creates a regex like /\bword\b/ which means "word" must stand alone
+    // whole-word match that also works for accented, non-Latin and punctuation-ending names
     const match = blockList.find(term => {
         // Escape special regex characters in the blocked term (like ., *, +)
         const safeTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         
-        // \b ensures word boundaries. 
-        // "after" matches "after" but NOT "afterpiece"
-        const regex = new RegExp(`\\b${safeTerm}\\b`, 'i');
+        // whole-word match that also works for accented, non-Latin and punctuation-ending names
+        const regex = new RegExp(`(?<![\\p{L}\\p{N}_])${safeTerm}(?![\\p{L}\\p{N}_])`, 'iu');
         
         return regex.test(checkString);
     });

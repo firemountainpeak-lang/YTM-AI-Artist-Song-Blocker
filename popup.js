@@ -104,7 +104,7 @@ function fetchAIList() {
             else if (data.artists) raw = data.artists;
             else raw = Object.values(data).flat();
 
-            const count = raw.length;
+            const count = raw.filter(a => typeof a === 'string' || (a && typeof a.name === 'string' && a.removed !== true)).length;
             
             // NEW SUMMARY VIEW
             list.innerHTML = `
