@@ -7,6 +7,8 @@ const GITHUB_URL = 'https://raw.githubusercontent.com/xoundbyte/soul-over-ai/mai
 
 let blockList = [];
 let trackList = [];
+let blockRegexes = [];
+let lastCheckedKey = "";
 let lastProcessedSong = ""; 
 
 console.log("[YTM Ward] Engine Started. Created by Spirit Flame (spiritflame@tutamail.com)");
@@ -67,7 +69,13 @@ async function updateBlockList() {
         .filter(item => typeof item === 'string' && item.trim().length > 0)
         .map(s => s.toLowerCase()) // Keep lowercase for case-insensitive matching
         .sort(); 
-        
+
+    blockRegexes = blockList.map(term => {
+        const safeTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return { term, regex: new RegExp(`(?<![\\p{L}\\p{N}_])${safeTerm}(?![\\p{L}\\p{N}_])`, 'iu') };
+    });
+    lastCheckedKey = "";
+
     console.log(`[YTM Ward] Engine Loaded ${blockList.length} terms.`);
 }
 
@@ -123,6 +131,9 @@ function checkAndSkip() {
     const song = getSongInfo();
     if (!song) return;
     if (song.title === lastProcessedSong) return;
+    const songKey = song.artist + "\n" + song.title;
+    if (songKey === lastCheckedKey) return;
+    lastCheckedKey = songKey;
 
     const songTitle = song.title.trim().toLowerCase();
     const songArtist = primaryArtist(song.artist);
@@ -139,15 +150,8 @@ function checkAndSkip() {
 
     // MATCHING LOGIC: Whole Word Regex
     // whole-word match that also works for accented, non-Latin and punctuation-ending names
-    const match = blockList.find(term => {
-        // Escape special regex characters in the blocked term (like ., *, +)
-        const safeTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        
-        // whole-word match that also works for accented, non-Latin and punctuation-ending names
-        const regex = new RegExp(`(?<![\\p{L}\\p{N}_])${safeTerm}(?![\\p{L}\\p{N}_])`, 'iu');
-        
-        return regex.test(checkString);
-    });
+    const hit = blockRegexes.find(r => r.regex.test(checkString));
+    const match = hit ? hit.term : null;
     
     if (match) {
         lastProcessedSong = song.title;
