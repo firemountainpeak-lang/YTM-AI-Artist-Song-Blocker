@@ -53,7 +53,7 @@ Create custom rules to skip tracks based on title keywords.
 ## 📦 Installation
 
 ### Option A: Chrome Web Store
-*(Link pending publication)*
+[YTM AI Artist & Song Blocker](https://chromewebstore.google.com/detail/ytm-ai-artist-song-blocke/agmkdlmiklcgmdkkjccfpdlhcmncfkmo)
 
 ### Option B: Developer Mode (Load Unpacked)
 1. Download or clone this repository to your local machine.
